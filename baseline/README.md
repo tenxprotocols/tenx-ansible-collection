@@ -170,7 +170,7 @@ ansible-playbook tenx.baseline.site -e baseline_datadog_api_key=YOUR_KEY
 
 ## License
 
-UNLICENSED
+MIT
 
 ## Author
 
