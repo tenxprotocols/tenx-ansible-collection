@@ -1,0 +1,79 @@
+---
+- name: Check if baseline hardening has already been applied
+  ansible.builtin.stat:
+    path: "{{ baseline_hardening_marker_file }}"
+  register: baseline_marker
+  when: not baseline_force
+
+- name: Display skip message if baseline hardening already applied
+  ansible.builtin.debug:
+    msg: "Baseline hardening already applied. Skipping. Set baseline_force=true to re-run."
+  when:
+    - not baseline_force
+    - baseline_marker.stat.exists | default(false)
+
+- name: Apply Hardening
+  when: baseline_force or not (baseline_marker.stat.exists | default(false))
+  block:
+    - name: Apply Hardening Role
+      ansible.builtin.include_role:
+        name: devsec.hardening.os_hardening
+      vars:
+        # Auditd Tuning
+        os_auditd_max_log_file: 100
+        os_auditd_disk_full_action: "SYSLOG"
+        os_auditd_disk_error_action: "SYSLOG"
+        os_auditd_admin_space_left_action: "SYSLOG"
+        # Sysctl Overwrite
+        sysctl_overwrite:
+          # --- Open Files & Handles ---
+          fs.aio-max-nr: 1048576
+          fs.file-max: 2097152
+          fs.inotify.max_user_watches: 2099999999
+          fs.inotify.max_user_instances: 2099999999
+          fs.inotify.max_queued_events: 2099999999
+          # --- Network Core ---
+          net.core.netdev_max_backlog: 16384
+          net.core.optmem_max: 65535
+          net.core.rmem_default: 262144
+          net.core.rmem_max: 16777216
+          net.core.somaxconn: 65535
+          net.core.wmem_default: 262144
+          net.core.wmem_max: 16777216
+          # --- TCP Tuning ---
+          net.ipv4.ip_forward: 1
+          net.ipv4.ip_local_port_range: "1024 65535"
+          net.ipv4.ping_group_range: "0 65535"
+          net.ipv4.tcp_fin_timeout: 15
+          net.ipv4.tcp_max_orphans: 262144
+          net.ipv4.tcp_max_syn_backlog: 65535
+          net.ipv4.tcp_rmem: "4096 87380 16777216"
+          net.ipv4.tcp_slow_start_after_idle: 0
+          net.ipv4.tcp_tw_reuse: 1
+          net.ipv4.tcp_wmem: "4096 65536 16777216"
+          net.ipv6.conf.all.forwarding: 1
+          # --- TCP Keepalive ---
+          net.ipv4.tcp_keepalive_time: 60
+          net.ipv4.tcp_keepalive_intvl: 10
+          net.ipv4.tcp_keepalive_probes: 6
+          # --- Conntrack (If firewall/netfilter is active) ---
+          net.netfilter.nf_conntrack_max: 1000000
+          net.netfilter.nf_conntrack_tcp_timeout_established: 86400
+          # --- Virtual Memory ---
+          vm.swappiness: 10
+
+    - name: Set unlimited open files (nofile) for all users
+      community.general.pam_limits:
+        domain: "*"
+        limit_type: "-"
+        limit_item: nofile
+        value: 1048576
+
+    - name: Create baseline hardening completion marker
+      ansible.builtin.file:
+        path: "{{ baseline_hardening_marker_file }}"
+        state: touch
+        mode: '0644'
+        modification_time: preserve
+        access_time: preserve
+      changed_when: false

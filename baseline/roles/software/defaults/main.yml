@@ -1,0 +1,7 @@
+---
+baseline_software_force: false
+baseline_software_marker_file: "/etc/tenx/.baseline-software-applied"
+# Datadog API key. Defaults to the DD_API_KEY environment variable so it can
+# be supplied by Semaphore UI (Environment secret) or any CI runner; can also
+# be overridden as an extra var (-e baseline_datadog_api_key=...).
+baseline_datadog_api_key: "{{ lookup('env', 'DD_API_KEY') }}"

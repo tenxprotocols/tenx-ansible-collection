@@ -1,0 +1,1 @@
+DD_EXTRA_TAGS="{{ baseline_datadog_tags | join(' ') }}"

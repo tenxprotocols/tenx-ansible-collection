@@ -1,0 +1,55 @@
+---
+- name: Check if baseline software has already been applied
+  ansible.builtin.stat:
+    path: "{{ baseline_software_marker_file }}"
+  register: baseline_software_marker
+  when: not baseline_software_force
+
+- name: Display skip message if baseline software already applied
+  ansible.builtin.debug:
+    msg: "Baseline software already applied. Skipping. Set baseline_software_force=true to re-run."
+  when:
+    - not baseline_software_force
+    - baseline_software_marker.stat.exists | default(false)
+
+- name: Apply Software Configuration
+  when: baseline_software_force or not (baseline_software_marker.stat.exists | default(false))
+  block:
+    - name: Include APT configuration
+      ansible.builtin.include_role:
+        name: tenx.baseline.apt
+
+    - name: Install Ghostty support
+      ansible.builtin.include_role:
+        name: tenx.install.ghostty
+
+    - name: Ensure Datadog API key is provided
+      ansible.builtin.assert:
+        that:
+          - baseline_datadog_api_key is defined
+          - baseline_datadog_api_key | length > 0
+        fail_msg: "baseline_datadog_api_key must be defined and not empty"
+
+    - name: Deploy Datadog Agent
+      ansible.builtin.include_role:
+        name: datadog.dd.agent
+      vars:
+        datadog_api_key: "{{ baseline_datadog_api_key }}"
+
+    - name: Deploy DataDog environment tags
+      ansible.builtin.template:
+        src: templates/datadog-environment
+        dest: /etc/datadog-agent/environment
+        owner: dd-agent
+        group: dd-agent
+        mode: '0644'
+      notify: restart datadog-agent
+
+    - name: Create baseline software completion marker
+      ansible.builtin.file:
+        path: "{{ baseline_software_marker_file }}"
+        state: touch
+        mode: '0644'
+        modification_time: preserve
+        access_time: preserve
+      changed_when: false
