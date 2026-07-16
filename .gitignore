@@ -1,0 +1,57 @@
+# Aider
+.aider*
+
+# Ansible
+*.retry
+*.pyc
+__pycache__/
+.ansible/
+
+# Collection build artifacts
+*.tar.gz
+*.zip
+
+# Vault passwords
+vault_pass.txt
+.vault_pass
+*vault*.key
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.tox/
+htmlcov/
+.coverage
+coverage.xml
+
+# Logs
+*.log
+logs/
+
+# Sensitive data
+secrets/
+credentials/
+*.pem
+*.key
+*.crt
+!*/meta/main.yml

@@ -1,0 +1,9 @@
+---
+# Collections must specify a minimum Ansible version
+requires_ansible: ">=2.9"
+
+# Specify plugin routing if needed
+# plugin_routing:
+#   modules:
+#     old_module_name:
+#       redirect: new_module_name

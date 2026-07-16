@@ -1,0 +1,5 @@
+---
+# Variables for {{ROLE_NAME}} role
+# These should not typically be overridden
+
+# Internal variables used by the role

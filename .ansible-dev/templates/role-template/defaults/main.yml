@@ -1,0 +1,7 @@
+---
+# Default variables for {{ROLE_NAME}} role
+# These can be overridden in playbooks or inventory
+
+# Example variables - replace with actual defaults
+{{ROLE_NAME}}_enabled: true
+{{ROLE_NAME}}_config_path: "/etc/{{ROLE_NAME}}"

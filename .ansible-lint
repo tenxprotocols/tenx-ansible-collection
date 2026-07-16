@@ -1,0 +1,38 @@
+# .ansible-lint configuration for TenX Ansible Collections
+---
+# Exclude paths from linting
+exclude_paths:
+  - .ansible/
+  - .vscode/
+  - .git/
+  - templates/
+  - '*.tar.gz'
+
+# Enable specific rules
+enable_list:
+  - args
+  - empty-string-compare
+  - no-log-password
+  - no-same-owner
+
+# Skip specific rules
+skip_list:
+  - var-naming  # Allow flexible variable naming conventions
+  - yaml[line-length]  # Allow long lines in YAML
+  - name[casing]  # Allow flexible task naming
+  - role-name  # Allow role names with dashes
+
+# Configure specific rules
+warn_list:
+  - experimental  # Warn about experimental features
+  - ignore-errors  # Warn about ignore_errors usage
+  - no-handler  # Warn about tasks that look like handlers
+
+# Use specific Ansible version for linting
+# ansible_version: "2.9"
+
+# Configure verbosity
+# verbosity: 1
+
+# Treat warnings as errors
+# strict: false

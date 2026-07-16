@@ -1,0 +1,27 @@
+---
+# Main tasks file for {{ROLE_NAME}} role
+
+- name: Display role execution message
+  ansible.builtin.debug:
+    msg: "Executing {{ROLE_NAME}} role"
+
+- name: Ensure role is enabled
+  ansible.builtin.fail:
+    msg: "{{ROLE_NAME}} role is disabled. Set {{ROLE_NAME}}_enabled: true to enable."
+  when: not {{ROLE_NAME}}_enabled
+
+# Add your tasks here
+# Example task structure:
+# - name: Install package
+#   ansible.builtin.apt:
+#     name: package_name
+#     state: present
+#     update_cache: true
+#   when: {{ROLE_NAME}}_enabled
+
+# - name: Copy configuration file
+#   ansible.builtin.template:
+#     src: config.j2
+#     dest: "{{ {{ROLE_NAME}}_config_path }}/config.conf"
+#     mode: '0644'
+#   notify: Restart service
