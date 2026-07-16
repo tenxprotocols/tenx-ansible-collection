@@ -1,0 +1,8 @@
+---
+- name: TenX Baseline Setup
+  hosts: "{{ target_hosts | default('all') }}"
+  become: true
+  roles:
+    - role: tenx.baseline.common
+    - role: tenx.baseline.hardening
+    - role: tenx.baseline.software

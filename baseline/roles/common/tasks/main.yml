@@ -1,0 +1,5 @@
+---
+- name: Create /etc/tenx directory
+  ansible.builtin.file:
+    path: /etc/tenx
+    state: directory

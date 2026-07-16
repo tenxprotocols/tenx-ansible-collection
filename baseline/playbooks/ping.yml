@@ -1,0 +1,7 @@
+---
+- name: Ping all inventory hosts
+  hosts: "{{ target_hosts | default('all') }}"
+  gather_facts: false
+  tasks:
+    - name: Ping host
+      ansible.builtin.ping:

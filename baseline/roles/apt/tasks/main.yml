@@ -1,0 +1,45 @@
+---
+- name: Ensure required packages are present
+  ansible.builtin.apt:
+    name:
+      - gpg
+      - apt-transport-https
+    state: present
+
+- name: Add kernel.org Ubuntu mirror (main, updates, backports)
+  ansible.builtin.deb822_repository:
+    name: kernel-org-ubuntu
+    types: [ deb, deb-src ]
+    uris:
+      - "https://mirrors.kernel.org/ubuntu"
+    suites:
+      - "{{ ansible_distribution_release }}"
+      - "{{ ansible_distribution_release }}-updates"
+      - "{{ ansible_distribution_release }}-backports"
+    components:
+      - main
+      - restricted
+      - universe
+      - multiverse
+    signed_by: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+    state: present
+    enabled: yes
+  notify: Update APT cache
+
+- name: Add Ubuntu security mirror
+  ansible.builtin.deb822_repository:
+    name: ubuntu-security
+    types: [ deb, deb-src ]
+    uris:
+      - "http://security.ubuntu.com/ubuntu"
+    suites:
+      - "{{ ansible_distribution_release }}-security"
+    components:
+      - main
+      - restricted
+      - universe
+      - multiverse
+    signed_by: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+    state: present
+    enabled: yes
+  notify: Update APT cache

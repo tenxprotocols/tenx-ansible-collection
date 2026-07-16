@@ -1,0 +1,3 @@
+---
+baseline_force: false
+baseline_hardening_marker_file: "/etc/tenx/.baseline-hardening-applied"
