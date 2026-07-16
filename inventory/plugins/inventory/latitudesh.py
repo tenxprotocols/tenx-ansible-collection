@@ -33,16 +33,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         valid = False
         if super(InventoryModule, self).verify_file(path):
             # Base class verifies that the file exists and is readable
-            # Check if filename (without extension) is 'latitude' or 'latitudesh'
-            # and has a valid inventory extension (.yml, .yaml, or .json)
+            # Accept any filename with a valid inventory extension; the
+            # 'plugin' key in the file is validated during parse()
             import os
-            filename = os.path.basename(path)
-            name_without_ext, ext = os.path.splitext(filename)
+            _, ext = os.path.splitext(path)
 
-            valid_names = ['latitude', 'latitudesh']
-            valid_extensions = ['.yml', '.yaml', '.json']
-
-            if name_without_ext in valid_names and ext in valid_extensions:
+            if ext in ('.yml', '.yaml', '.json'):
                 valid = True
         return valid
 
