@@ -26,11 +26,10 @@ description: Ansible collection for custom inventory plugins and dynamic infrast
 
 # Either a single license or a list of licenses for content inside of a collection. Ansible Galaxy currently only
 # accepts L(SPDX,https://spdx.org/licenses/) licenses. This key is mutually exclusive with 'license_file'
-license: UNLICENSED
+license: MIT
 
 # The path to the license file for the collection. This path is relative to the root of the collection. This key is
 # mutually exclusive with 'license'
-license_file: ''
 
 # A list of tags you want to associate with the collection for indexing/searching. A tag name has the same character
 # requirements as 'namespace' and 'name'
@@ -47,16 +46,16 @@ tags:
 dependencies: {}
 
 # The URL of the originating SCM repository
-repository: https://github.com/tenx/ansible-collection-tenx
+repository: https://github.com/tenxprotocols/tenx-ansible-collection
 
 # The URL to any online docs
-documentation: https://github.com/tenx/ansible-collection-tenx
+documentation: https://github.com/tenxprotocols/tenx-ansible-collection
 
 # The URL to the homepage of the collection/project
-homepage: https://github.com/tenx/ansible-collection-tenx
+homepage: https://github.com/tenxprotocols/tenx-ansible-collection
 
 # The URL to the collection issue tracker
-issues: https://github.com/tenx/ansible-collection-tenx/issues
+issues: https://github.com/tenxprotocols/tenx-ansible-collection/issues
 
 # A list of file glob-like patterns used to filter any files or directories that should not be included in the build
 # artifact. A pattern is matched from the relative path of the file or directory of the collection directory. This
