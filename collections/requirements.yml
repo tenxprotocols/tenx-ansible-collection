@@ -1,0 +1,12 @@
+---
+# Installed automatically by Semaphore before each task run
+# (repo-root collections/requirements.yml is one of the paths it checks).
+collections:
+  # This repo's own collections, installed from git so the runner always
+  # matches the checked-out main branch.
+  - name: git+ssh://git@github.com/tenxprotocols/tenx-ansible-collection.git#/inventory/
+    type: git
+    version: main
+  - name: git+ssh://git@github.com/tenxprotocols/tenx-ansible-collection.git#/baseline/
+    type: git
+    version: main

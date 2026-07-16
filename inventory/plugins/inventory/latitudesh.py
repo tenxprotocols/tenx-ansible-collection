@@ -1,5 +1,7 @@
+import json
 import logging
-import requests
+import urllib.parse
+import urllib.request
 from typing import Any, Dict, Union, List
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -84,10 +86,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             }
     
             while True:
-                res = requests.get(url, headers=headers, params=flatten_params_dict(params), timeout=10)
-                res.raise_for_status()
-    
-                servers = res.json().get("data", [])
+                servers = http_get_json(url, headers, params=flatten_params_dict(params)).get("data", [])
                 if not servers:
                     break
                 
@@ -107,10 +106,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         }
 
         # Tags are account level, so we don't need to filter by project
-        res = requests.get(url, headers=headers, timeout=10)
-        res.raise_for_status()
-
-        all_tags = [tag["attributes"]["name"] for tag in res.json().get("data", [])]
+        all_tags = [tag["attributes"]["name"] for tag in http_get_json(url, headers).get("data", [])]
         
         return all_tags
 
@@ -153,6 +149,15 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         self._add_host_to_keyed_groups(
             self.get_option("keyed_groups"), host_vars, hostname, strict=strict
         )
+
+
+def http_get_json(url: str, headers: Dict[str, str], params: Dict[str, Any] = None) -> Dict[str, Any]:
+    """GET a JSON document using only the standard library (raises on HTTP errors)."""
+    if params:
+        url = f"{url}?{urllib.parse.urlencode(params, doseq=True)}"
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=10) as res:
+        return json.load(res)
 
 
 def flatten_params_dict(params: Dict[str, Any]) -> Dict[str, Union[str, List[str]]]:
