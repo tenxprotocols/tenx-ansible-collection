@@ -7,3 +7,4 @@
     - role: tenx.baseline.hardening
     - role: tenx.baseline.software
     - role: tenx.baseline.users
+    - role: tenx.baseline.netbird

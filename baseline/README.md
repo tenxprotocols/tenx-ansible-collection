@@ -9,6 +9,7 @@ The `tenx.baseline` collection provides a standardized baseline configuration fo
 - **OS Hardening**: Applies security hardening to the operating system using DevSec standards
 - **SSH Hardening**: Secures SSH configuration using DevSec best practices
 - **Local Users for NetBird SSH**: local accounts with pinned UIDs; auth and Google-group authorization happen in NetBird (see [roles/users](roles/users/README.md))
+- **NetBird Client**: installs the NetBird client and enrolls the host as a peer, with native SSH enabled (see [roles/netbird](roles/netbird/README.md))
 
 ## Requirements
 
@@ -164,6 +165,16 @@ Example:
 ## User accounts
 
 The `users` role creates local accounts (defined in inventory `group_vars`/`host_vars`, see [roles/users/README.md](roles/users/README.md)); SSH access is authenticated and authorized by NetBird against Google. The `sssd` role (SSSD + Google Secure LDAP) remains in the collection as an alternative but is not part of `site.yml`.
+
+## NetBird Setup Key
+
+The `netbird` role enrolls each host as a NetBird peer. First-time
+enrollment needs `netbird_setup_key`, which defaults to the `NB_SETUP_KEY`
+environment variable, and the management server URL comes from
+`netbird_management_url` / `NB_MANAGEMENT_URL` (empty targets NetBird
+cloud; set it for a self-hosted server). In Semaphore UI add both to the
+template's Environment (`NB_SETUP_KEY` as a secret). Hosts that are already
+enrolled skip enrollment, so the key is only consulted for new peers.
 
 ## Datadog API Key
 
