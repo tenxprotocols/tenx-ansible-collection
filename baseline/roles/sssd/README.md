@@ -56,6 +56,7 @@ by its TLS certificate.
 | `sssd_default_shell` | `/bin/bash` | shell for LDAP users |
 | `sssd_override_homedir` | `/home/%u` | home directory pattern |
 | `sssd_manage_mkhomedir` | `true` | create home dirs on first login |
+| `sssd_precreate_home_groups` | `sssd_sudo_groups` | LDAP groups whose members get home dirs pre-created (NetBird SSH chdirs into the home before PAM can create it, so first NetBird logins fail without this) |
 | `sssd_sudo_groups` | `[infra-admins]` | Google groups granted NOPASSWD sudo |
 | `sssd_enable_ssh_password_auth` | `false` | allow Google-password SSH logins |
 

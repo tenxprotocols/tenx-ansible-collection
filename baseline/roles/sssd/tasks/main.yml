@@ -110,3 +110,33 @@
         name: sssd
         enabled: true
         state: started
+
+    - name: Resolve members of LDAP groups needing home directories
+      ansible.builtin.command: getent group {{ item }}
+      loop: "{{ sssd_precreate_home_groups }}"
+      register: sssd_home_group_lookups
+      changed_when: false
+      # rc 2 = group not found (or SSSD offline); skip silently rather than
+      # failing the baseline — pam_mkhomedir still covers non-NetBird logins
+      failed_when: sssd_home_group_lookups.rc not in [0, 2]
+
+    - name: Build list of LDAP users needing home directories
+      ansible.builtin.set_fact:
+        sssd_home_users: >-
+          {{ sssd_home_group_lookups.results
+             | selectattr('rc', 'defined') | selectattr('rc', 'eq', 0)
+             | map(attribute='stdout')
+             | map('split', ':') | map('last')
+             | map('split', ',') | flatten
+             | map('trim') | select
+             | unique | list }}
+
+    # NetBird SSH chdirs into the home dir before login(1)/PAM can create it
+    - name: Pre-create home directories for LDAP users
+      ansible.builtin.shell: >-
+        cp -rT /etc/skel /home/{{ item }} &&
+        chown -R {{ item }}:{{ item }} /home/{{ item }} &&
+        chmod 0750 /home/{{ item }}
+      args:
+        creates: "/home/{{ item }}"
+      loop: "{{ sssd_home_users }}"

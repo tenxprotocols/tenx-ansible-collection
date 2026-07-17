@@ -31,6 +31,12 @@ sssd_override_homedir: "/home/%u"
 # Create home directories on first login (pam_mkhomedir)
 sssd_manage_mkhomedir: true
 
+# Pre-create home directories for members of these LDAP groups on every run.
+# NetBird's SSH server chdirs into the user's home before exec'ing login(1),
+# so pam_mkhomedir alone is too late for first-time NetBird logins
+# (fork/exec /usr/bin/login: no such file or directory).
+sssd_precreate_home_groups: "{{ sssd_sudo_groups }}"
+
 # LDAP groups granted sudo via /etc/sudoers.d. NOPASSWD because
 # identity-aware SSH sessions (NetBird JWT) have no interactive password.
 sssd_sudo_groups:
