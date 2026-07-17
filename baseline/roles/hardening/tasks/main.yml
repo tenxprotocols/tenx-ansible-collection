@@ -15,6 +15,16 @@
 - name: Apply Hardening
   when: baseline_force or not (baseline_marker.stat.exists | default(false))
   block:
+    # Minimal Ubuntu images ship journald-only (no rsyslog) and lack the
+    # syslog group, but devsec's Ubuntu vars chgrp /var/log to it
+    # (os_mnt_var_log_group). Pre-create it as a system group; rsyslog
+    # adopts an existing group if installed later.
+    - name: Ensure syslog group exists for /var/log hardening
+      ansible.builtin.group:
+        name: syslog
+        system: true
+        state: present
+
     - name: Apply Hardening Role
       ansible.builtin.include_role:
         name: devsec.hardening.os_hardening
