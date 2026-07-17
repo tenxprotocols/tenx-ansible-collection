@@ -38,7 +38,10 @@ sssd_sudo_groups:
 
 # Allow password logins over OpenSSH for LDAP users. Off by default: NetBird
 # native SSH authenticates against Google via OIDC/JWT and needs no password
-# auth, and the baseline SSH hardening keeps PasswordAuthentication off.
+# auth. The role always writes /etc/ssh/sshd_config.d/60-google-ldap.conf to
+# enforce this policy — with pam_sss installed, an open password prompt would
+# let internet scanners verify password guesses against Google Directory
+# (Secure LDAP binds bypass 2-Step Verification).
 sssd_enable_ssh_password_auth: false
 
 # Packages required for SSSD with LDAP, NSS and PAM integration

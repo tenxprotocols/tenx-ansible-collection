@@ -84,26 +84,25 @@
         validate: 'visudo -cf %s'
       when: sssd_sudo_groups | length > 0
 
-    - name: Allow SSH password authentication for LDAP users
+    # With pam_sss in the stack, an open password prompt lets internet
+    # scanners verify guesses against Google Directory (LDAP binds bypass
+    # 2-Step Verification), so the drop-in is always enforced rather than
+    # trusting the SSH hardening role to have run. sshd uses the first
+    # obtained value and Ubuntu includes sshd_config.d at the top of
+    # sshd_config, so this wins over the distribution default.
+    - name: Enforce SSH password authentication policy for LDAP users
       ansible.builtin.copy:
         content: |
           # Managed by Ansible (tenx.baseline.sssd).
-          # Google Secure LDAP users authenticate with their Google password
-          # via PAM/SSSD. Not needed for NetBird native SSH (JWT auth).
-          PasswordAuthentication yes
+          # Google Secure LDAP users authenticate via NetBird native SSH
+          # (OIDC/JWT). Password auth policy: sssd_enable_ssh_password_auth.
+          PasswordAuthentication {{ 'yes' if sssd_enable_ssh_password_auth else 'no' }}
+          KbdInteractiveAuthentication no
         dest: /etc/ssh/sshd_config.d/60-google-ldap.conf
         owner: root
         group: root
         mode: '0644'
         validate: 'sshd -t -f %s'
-      when: sssd_enable_ssh_password_auth
-      notify: Restart ssh
-
-    - name: Remove SSH password authentication override when disabled
-      ansible.builtin.file:
-        path: /etc/ssh/sshd_config.d/60-google-ldap.conf
-        state: absent
-      when: not sssd_enable_ssh_password_auth
       notify: Restart ssh
 
     - name: Ensure sssd service is enabled and running

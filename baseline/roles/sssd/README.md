@@ -11,12 +11,14 @@ UID/GID, groups, home directory and shell all come from Google Directory.
   Google account via OIDC/JWT and the NetBird access policy maps your user or
   group to local OS users. NetBird resolves those users through `getent`
   (NSS), which is exactly what SSSD provides — no passwords, no keys on disk.
-- **Plain OpenSSH (optional):** with `sssd_enable_ssh_password_auth: true`
-  the role drops `/etc/ssh/sshd_config.d/60-google-ldap.conf` enabling
-  `PasswordAuthentication`, and PAM/SSSD verifies your Google password
-  against LDAP. Off by default; note the DevSec SSH hardening role manages
-  `/etc/ssh/sshd_config` and may not include `sshd_config.d` — verify before
-  relying on it.
+- **Plain OpenSSH (optional):** with `sssd_enable_ssh_password_auth: true`,
+  PAM/SSSD verifies your Google password against LDAP. Off by default.
+  The role always writes `/etc/ssh/sshd_config.d/60-google-ldap.conf` with
+  the resulting `PasswordAuthentication` policy (`no` unless opted in) —
+  with `pam_sss` installed, an open password prompt would let internet
+  scanners verify password guesses against Google Directory, and Secure
+  LDAP binds bypass 2-Step Verification. Do not leave password auth on for
+  internet-exposed hosts.
 
 Usernames are the local part of the email: `geoff@tenx.inc` → `geoff`.
 
