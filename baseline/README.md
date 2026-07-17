@@ -8,7 +8,7 @@ The `tenx.baseline` collection provides a standardized baseline configuration fo
 - **Ghostty Terminal Support**: Installs Ghostty terminfo for terminal compatibility
 - **OS Hardening**: Applies security hardening to the operating system using DevSec standards
 - **SSH Hardening**: Secures SSH configuration using DevSec best practices
-- **Google Workspace Identity**: SSSD + Google Secure LDAP so `@tenx.inc` accounts exist as POSIX users (see [roles/sssd](roles/sssd/README.md))
+- **Local Users for NetBird SSH**: local accounts with pinned UIDs; auth and Google-group authorization happen in NetBird (see [roles/users](roles/users/README.md))
 
 ## Requirements
 
@@ -161,9 +161,9 @@ Example:
 - `site.yml` - Main playbook that applies all baseline configurations
 - `ping.yml` - Connectivity check that pings every inventory host; useful for verifying dynamic inventory (e.g. from Semaphore UI) before running the baseline
 
-## Google Secure LDAP client credentials
+## User accounts
 
-The `sssd` role reads the Google Secure LDAP client certificate pair from the `GOOGLE_LDAP_CLIENT_CERT_B64` and `GOOGLE_LDAP_CLIENT_KEY_B64` environment variables (base64-encoded PEM) — add both as secrets to the Semaphore Environment. When unset the role skips with a warning, so the rest of the baseline still applies. Setup details in [roles/sssd/README.md](roles/sssd/README.md).
+The `users` role creates local accounts (defined in inventory `group_vars`/`host_vars`, see [roles/users/README.md](roles/users/README.md)); SSH access is authenticated and authorized by NetBird against Google. The `sssd` role (SSSD + Google Secure LDAP) remains in the collection as an alternative but is not part of `site.yml`.
 
 ## Datadog API Key
 

@@ -1,0 +1,84 @@
+---
+- name: Combine fleet-wide and host-specific accounts
+  ansible.builtin.set_fact:
+    users_all_accounts: "{{ users_accounts + users_accounts_extra }}"
+
+- name: Create supplementary groups
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid | default(omit) }}"
+    state: present
+  loop: "{{ users_groups }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create sudo group
+  ansible.builtin.group:
+    name: "{{ users_sudo_group }}"
+    gid: "{{ users_sudo_group_gid }}"
+    state: present
+
+- name: Create user accounts
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    comment: "{{ item.comment | default(item.name) }}"
+    shell: "{{ item.shell | default(users_default_shell) }}"
+    groups: >-
+      {{ (item.groups | default([]))
+         + ([users_sudo_group] if item.sudo | default(false) else []) }}
+    append: true
+    create_home: true
+    password_lock: true
+  loop: "{{ users_all_accounts }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# Corrects ownership when a home directory pre-dates the account (e.g. one
+# created by the earlier SSSD/LDAP setup under a different UID). Not
+# recursive — run `chown -R` once by hand when migrating such a host.
+- name: Ensure home directories are owned by their users
+  ansible.builtin.file:
+    path: "/home/{{ item.name }}"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: '0750'
+  loop: "{{ users_all_accounts }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Remove departed user accounts
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    remove: "{{ users_absent_remove_home }}"
+  loop: "{{ users_absent }}"
+
+- name: Grant sudo to the sudo group
+  ansible.builtin.copy:
+    content: |
+      # Managed by Ansible (tenx.baseline.users).
+      %{{ users_sudo_group }} ALL=(ALL) NOPASSWD:ALL
+    dest: "/etc/sudoers.d/90-{{ users_sudo_group }}"
+    owner: root
+    group: root
+    mode: '0440'
+    validate: 'visudo -cf %s'
+
+# sshd honors the first obtained value and Ubuntu includes sshd_config.d at
+# the top of sshd_config, so this wins over the distribution default even
+# when the run-once hardening role never ran.
+- name: Enforce SSH password authentication policy
+  ansible.builtin.copy:
+    content: |
+      # Managed by Ansible (tenx.baseline.users).
+      # Logins come via NetBird native SSH (Google OIDC/JWT).
+      PasswordAuthentication {{ 'yes' if users_enable_ssh_password_auth else 'no' }}
+      KbdInteractiveAuthentication no
+    dest: /etc/ssh/sshd_config.d/60-tenx-users.conf
+    owner: root
+    group: root
+    mode: '0644'
+    validate: 'sshd -t -f %s'
+  notify: Restart ssh
