@@ -1,0 +1,25 @@
+---
+galaxy_info:
+  author: TenX Protocols Infrastructure Team
+  description: Install the NetBird client and enroll the host as a peer
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+
+  galaxy_tags:
+    - netbird
+    - vpn
+    - wireguard
+    - networking
+    - ssh
+
+dependencies: []

@@ -1,0 +1,36 @@
+---
+# Setup key used to enroll this host as a peer. Defaults to the NB_SETUP_KEY
+# environment variable so it can be supplied by Semaphore UI (Environment
+# secret) or any CI runner; can also be overridden as an extra var
+# (-e netbird_setup_key=...). Only required until the peer has enrolled —
+# already-enrolled hosts skip enrollment entirely.
+netbird_setup_key: "{{ lookup('env', 'NB_SETUP_KEY') }}"
+
+# Management server URL. Empty uses the client default (NetBird cloud,
+# https://api.netbird.io). Point this at a self-hosted management server,
+# e.g. https://netbird.example.com:443. Defaults to the NB_MANAGEMENT_URL
+# environment variable.
+netbird_management_url: "{{ lookup('env', 'NB_MANAGEMENT_URL') }}"
+
+# Enroll the host as a peer with `netbird up` after installing. Set false to
+# only install the client package.
+netbird_join: true
+
+# Allow NetBird's native SSH server on this peer. Required for the
+# SSH-via-NetBird access model (see tenx.baseline.users); the access policy
+# in the management dashboard still decides who may actually connect.
+netbird_allow_ssh: true
+
+# Extra arguments appended to `netbird up`, e.g. ["--hostname", "web01"].
+netbird_up_extra_args: []
+
+# Package state: present (install once) or latest (upgrade on every run).
+netbird_package_state: present
+
+# Official NetBird apt repository.
+netbird_repo_url: "https://pkgs.netbird.io/debian"
+netbird_repo_key_url: "https://pkgs.netbird.io/debian/public.key"
+
+# Service management.
+netbird_service_enabled: true
+netbird_service_state: started
