@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+[sssd]
+config_file_version = 2
+services = nss, pam
+domains = {{ sssd_google_domain }}
+
+[domain/{{ sssd_google_domain }}]
+id_provider = ldap
+auth_provider = ldap
+ldap_uri = {{ sssd_ldap_uri }}
+ldap_search_base = {{ sssd_ldap_search_base }}
+ldap_schema = rfc2307bis
+ldap_user_uuid = entryUUID
+ldap_groups_use_matching_rule_in_chain = true
+ldap_initgroups_use_matching_rule_in_chain = true
+
+ldap_tls_cert = {{ sssd_ldap_client_cert_path }}
+ldap_tls_key = {{ sssd_ldap_client_key_path }}
+ldap_tls_cacert = /etc/ssl/certs/ca-certificates.crt
+
+cache_credentials = true
+enumerate = false
+default_shell = {{ sssd_default_shell }}
+override_homedir = {{ sssd_override_homedir }}
