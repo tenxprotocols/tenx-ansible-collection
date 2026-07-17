@@ -1,0 +1,57 @@
+---
+# Local user accounts managed on the host. NetBird native SSH authenticates
+# people against Google (OIDC/JWT) and its access policy maps Google groups
+# to these OS users, so the host needs no directory service — but the
+# accounts must exist locally.
+#
+# No accounts are defined here on purpose. Define users_accounts in
+# inventory — group_vars for the fleet-wide team, host_vars (or extra vars)
+# for per-host access — and use users_accounts_extra on a host or group to
+# add accounts on top of the shared list without redefining it.
+#
+# Per-account keys:
+#   name     (required)
+#   uid      (required — pin it so it matches on every host)
+#   comment  (optional, defaults to name)
+#   shell    (optional, defaults to users_default_shell)
+#   groups   (optional list of supplementary groups, e.g. [docker])
+#   sudo     (optional bool — adds the account to users_sudo_group)
+#
+# Example:
+#   users_accounts:
+#     - name: geoff
+#       uid: 2001
+#       sudo: true
+#       groups: [docker]
+users_accounts: []
+users_accounts_extra: []
+
+# Supplementary groups to create before accounts reference them.
+# Entries: name (required), gid (optional).
+# Example:
+#   users_groups:
+#     - name: docker
+#       gid: 2100
+users_groups: []
+
+# Accounts to remove (e.g. departed team members). Home directories are
+# kept unless users_absent_remove_home is true.
+users_absent: []
+users_absent_remove_home: false
+
+# Login shell for managed accounts (override per account with `shell`)
+users_default_shell: "/bin/bash"
+
+# Local group granted NOPASSWD sudo; accounts with `sudo: true` are members.
+# NOPASSWD because NetBird SSH sessions have no interactive password to
+# re-enter. Keep the name aligned with the Google group used in the NetBird
+# access policy so authorization reads the same everywhere.
+users_sudo_group: "infra-admins"
+users_sudo_group_gid: 2000
+
+# Allow password logins over OpenSSH. Off by default: NetBird native SSH
+# authenticates against Google and needs no password auth (accounts are
+# created with locked passwords regardless). The role always writes
+# /etc/ssh/sshd_config.d/60-tenx-users.conf to enforce the policy rather
+# than trusting the run-once SSH hardening role to have applied it.
+users_enable_ssh_password_auth: false

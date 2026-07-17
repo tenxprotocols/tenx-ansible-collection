@@ -1,0 +1,24 @@
+---
+galaxy_info:
+  author: TenX Protocols Infrastructure Team
+  description: Local user accounts with pinned UIDs for NetBird SSH access
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+
+  galaxy_tags:
+    - users
+    - ssh
+    - netbird
+    - identity
+
+dependencies: []
