@@ -1,0 +1,25 @@
+---
+galaxy_info:
+  author: TenX Protocols Infrastructure Team
+  description: SSSD with Google Secure LDAP for Workspace identities on Linux hosts
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+
+  galaxy_tags:
+    - sssd
+    - ldap
+    - google
+    - identity
+    - ssh
+
+dependencies: []

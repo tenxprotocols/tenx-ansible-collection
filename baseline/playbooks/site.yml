@@ -6,3 +6,4 @@
     - role: tenx.baseline.common
     - role: tenx.baseline.hardening
     - role: tenx.baseline.software
+    - role: tenx.baseline.sssd

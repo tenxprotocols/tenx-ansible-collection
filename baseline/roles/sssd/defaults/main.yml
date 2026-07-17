@@ -1,0 +1,50 @@
+---
+# Google Workspace domain; also used as the SSSD domain name
+sssd_google_domain: "tenx.inc"
+
+# Google Secure LDAP endpoint
+sssd_ldap_uri: "ldaps://ldap.google.com:636"
+
+# LDAP search base, derived from the domain (tenx.inc -> dc=tenx,dc=inc)
+sssd_ldap_search_base: "dc={{ sssd_google_domain.split('.') | join(',dc=') }}"
+
+# Base64-encoded PEM contents of the Google Secure LDAP client certificate
+# and private key (Google Admin Console -> Apps -> LDAP -> <client> ->
+# download certificate). Default to environment variables so they can be
+# supplied by Semaphore UI (Environment secrets) or any CI runner; can also
+# be overridden as extra vars. When either is empty the role skips itself
+# with a warning instead of failing, so the baseline stays usable before the
+# LDAP client has been set up.
+sssd_ldap_client_cert_b64: "{{ lookup('env', 'GOOGLE_LDAP_CLIENT_CERT_B64') }}"
+sssd_ldap_client_key_b64: "{{ lookup('env', 'GOOGLE_LDAP_CLIENT_KEY_B64') }}"
+
+# Where the client certificate pair is written on the host
+sssd_pki_dir: "/var/lib/sssd/pki"
+sssd_ldap_client_cert_path: "{{ sssd_pki_dir }}/google-ldap-client.crt"
+sssd_ldap_client_key_path: "{{ sssd_pki_dir }}/google-ldap-client.key"
+
+# Login environment for LDAP users. Google Secure LDAP does not always carry
+# POSIX shell/home attributes, so provide sane defaults.
+sssd_default_shell: "/bin/bash"
+sssd_override_homedir: "/home/%u"
+
+# Create home directories on first login (pam_mkhomedir)
+sssd_manage_mkhomedir: true
+
+# LDAP groups granted sudo via /etc/sudoers.d. NOPASSWD because
+# identity-aware SSH sessions (NetBird JWT) have no interactive password.
+sssd_sudo_groups:
+  - infra-admins
+
+# Allow password logins over OpenSSH for LDAP users. Off by default: NetBird
+# native SSH authenticates against Google via OIDC/JWT and needs no password
+# auth, and the baseline SSH hardening keeps PasswordAuthentication off.
+sssd_enable_ssh_password_auth: false
+
+# Packages required for SSSD with LDAP, NSS and PAM integration
+sssd_packages:
+  - sssd
+  - sssd-ldap
+  - sssd-tools
+  - libnss-sss
+  - libpam-sss

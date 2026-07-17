@@ -1,0 +1,113 @@
+---
+- name: Determine whether Google LDAP client credentials were provided
+  ansible.builtin.set_fact:
+    sssd_credentials_present: >-
+      {{ sssd_ldap_client_cert_b64 | length > 0 and
+         sssd_ldap_client_key_b64 | length > 0 }}
+
+- name: Warn when Google LDAP client credentials are missing
+  ansible.builtin.debug:
+    msg: >-
+      Google Secure LDAP client credentials are not configured
+      (sssd_ldap_client_cert_b64 / sssd_ldap_client_key_b64, usually from the
+      GOOGLE_LDAP_CLIENT_CERT_B64 / GOOGLE_LDAP_CLIENT_KEY_B64 environment
+      secrets). Skipping SSSD setup.
+  when: not sssd_credentials_present
+
+- name: Configure SSSD for Google Secure LDAP
+  when: sssd_credentials_present
+  block:
+    - name: Install SSSD packages
+      ansible.builtin.apt:
+        name: "{{ sssd_packages }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Ensure SSSD PKI directory exists
+      ansible.builtin.file:
+        path: "{{ sssd_pki_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: Deploy Google LDAP client certificate
+      ansible.builtin.copy:
+        content: "{{ sssd_ldap_client_cert_b64 | b64decode }}"
+        dest: "{{ sssd_ldap_client_cert_path }}"
+        owner: root
+        group: root
+        mode: '0600'
+      notify: Restart sssd
+
+    - name: Deploy Google LDAP client key
+      ansible.builtin.copy:
+        content: "{{ sssd_ldap_client_key_b64 | b64decode }}"
+        dest: "{{ sssd_ldap_client_key_path }}"
+        owner: root
+        group: root
+        mode: '0600'
+      no_log: true
+      notify: Restart sssd
+
+    - name: Deploy SSSD configuration
+      ansible.builtin.template:
+        src: sssd.conf.j2
+        dest: /etc/sssd/sssd.conf
+        owner: root
+        group: root
+        mode: '0600'
+      notify: Restart sssd
+
+    - name: Check whether pam_mkhomedir is enabled
+      ansible.builtin.command: grep -q pam_mkhomedir.so /etc/pam.d/common-session
+      register: sssd_mkhomedir_check
+      changed_when: false
+      failed_when: sssd_mkhomedir_check.rc not in [0, 1]
+      when: sssd_manage_mkhomedir
+
+    - name: Enable pam_mkhomedir so home directories are created on first login
+      ansible.builtin.command: pam-auth-update --enable mkhomedir
+      changed_when: true
+      when:
+        - sssd_manage_mkhomedir
+        - sssd_mkhomedir_check.rc != 0
+
+    - name: Grant sudo to LDAP admin groups
+      ansible.builtin.template:
+        src: sudoers-google-ldap.j2
+        dest: /etc/sudoers.d/90-google-ldap
+        owner: root
+        group: root
+        mode: '0440'
+        validate: 'visudo -cf %s'
+      when: sssd_sudo_groups | length > 0
+
+    - name: Allow SSH password authentication for LDAP users
+      ansible.builtin.copy:
+        content: |
+          # Managed by Ansible (tenx.baseline.sssd).
+          # Google Secure LDAP users authenticate with their Google password
+          # via PAM/SSSD. Not needed for NetBird native SSH (JWT auth).
+          PasswordAuthentication yes
+        dest: /etc/ssh/sshd_config.d/60-google-ldap.conf
+        owner: root
+        group: root
+        mode: '0644'
+        validate: 'sshd -t -f %s'
+      when: sssd_enable_ssh_password_auth
+      notify: Restart ssh
+
+    - name: Remove SSH password authentication override when disabled
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config.d/60-google-ldap.conf
+        state: absent
+      when: not sssd_enable_ssh_password_auth
+      notify: Restart ssh
+
+    - name: Ensure sssd service is enabled and running
+      ansible.builtin.systemd:
+        name: sssd
+        enabled: true
+        state: started
