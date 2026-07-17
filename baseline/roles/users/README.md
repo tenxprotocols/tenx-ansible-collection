@@ -76,15 +76,3 @@ ssh geoff@<peer>             # Google OIDC flow in browser, no password
 sudo -l                      # NOPASSWD via /etc/sudoers.d/90-infra-admins
 sudo sshd -T | grep -i passwordauthentication   # no
 ```
-
-## Migrating a host from the sssd role
-
-The earlier `tenx.baseline.sssd` role created homes under Google-assigned
-UIDs. On such hosts, after the first run of this role:
-
-```bash
-sudo chown -R <user>:<user> /home/<user>     # re-own home to the local uid
-sudo rm -f /etc/sudoers.d/90-google-ldap     # stale LDAP sudo grant
-sudo apt-get purge -y sssd sssd-ldap sssd-tools libnss-sss libpam-sss
-sudo rm -rf /etc/sssd /var/lib/sssd
-```

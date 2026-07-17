@@ -164,7 +164,7 @@ Example:
 
 ## User accounts
 
-The `users` role creates local accounts (defined in inventory `group_vars`/`host_vars`, see [roles/users/README.md](roles/users/README.md)); SSH access is authenticated and authorized by NetBird against Google. The `sssd` role (SSSD + Google Secure LDAP) remains in the collection as an alternative but is not part of `site.yml`.
+The `users` role creates local accounts (defined in inventory `group_vars`/`host_vars`, see [roles/users/README.md](roles/users/README.md)); SSH access is authenticated and authorized by NetBird against Google.
 
 ## NetBird Setup Key
 

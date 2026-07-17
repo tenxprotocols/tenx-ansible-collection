@@ -1,5 +1,0 @@
-# {{ ansible_managed }}
-# Sudo for Google Workspace groups served through SSSD / Google Secure LDAP.
-{% for group in sssd_sudo_groups %}
-%{{ group }} ALL=(ALL) NOPASSWD:ALL
-{% endfor %}

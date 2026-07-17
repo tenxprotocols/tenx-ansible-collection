@@ -34,9 +34,9 @@
   loop_control:
     label: "{{ item.name }}"
 
-# Corrects ownership when a home directory pre-dates the account (e.g. one
-# created by the earlier SSSD/LDAP setup under a different UID). Not
-# recursive — run `chown -R` once by hand when migrating such a host.
+# Corrects ownership when a home directory pre-dates the account (e.g.
+# created under a different UID). Not recursive — run `chown -R` once by
+# hand when migrating such a host.
 - name: Ensure home directories are owned by their users
   ansible.builtin.file:
     path: "/home/{{ item.name }}"
