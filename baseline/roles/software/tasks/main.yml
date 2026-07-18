@@ -21,7 +21,7 @@
 
     - name: Install Ghostty support
       ansible.builtin.include_role:
-        name: tenx.install.ghostty
+        name: tenx.baseline.ghostty
 
     - name: Ensure Datadog API key is provided
       ansible.builtin.assert:

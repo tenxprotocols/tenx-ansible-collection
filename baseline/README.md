@@ -19,7 +19,6 @@ The `tenx.baseline` collection provides a standardized baseline configuration fo
 ## Dependencies
 
 This collection depends on:
-- `tenx.install` - For Ghostty terminal installation
 - `devsec.hardening` - For security hardening roles
 
 ## Installation
@@ -131,7 +130,7 @@ ansible all -b -m file -a "path=/etc/tenx-baseline-applied state=absent"
   become: true
 
   roles:
-    - role: tenx.install.ghostty
+    - role: tenx.baseline.ghostty
     - role: devsec.hardening.os_hardening
     - role: devsec.hardening.ssh_hardening
 ```
@@ -152,7 +151,7 @@ Example:
     ssh_allow_tcp_forwarding: false
 
   roles:
-    - role: tenx.install.ghostty
+    - role: tenx.baseline.ghostty
     - role: devsec.hardening.os_hardening
     - role: devsec.hardening.ssh_hardening
 ```
