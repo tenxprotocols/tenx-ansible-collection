@@ -63,8 +63,20 @@
                 if netbird_management_url | length > 0 else [])
              + (['--allow-server-ssh'] if netbird_allow_ssh else [])
              + netbird_up_extra_args }}
+      register: netbird_up_result
       no_log: true
       changed_when: true
+      failed_when: false
+
+    # The raw result stays no_log (the argv contains the setup key); surface
+    # the error with the key redacted so failures are debuggable.
+    - name: Report enrollment failure
+      ansible.builtin.fail:
+        msg: >-
+          netbird up failed (rc={{ netbird_up_result.rc }}):
+          {{ ((netbird_up_result.stderr | default('')) ~ ' ' ~ (netbird_up_result.stdout | default('')))
+             | replace(netbird_setup_key, '***') | trim }}
+      when: netbird_up_result.rc != 0
 
     - name: Verify management connection
       ansible.builtin.command: netbird status
