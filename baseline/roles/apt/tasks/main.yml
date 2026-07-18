@@ -4,6 +4,7 @@
     name:
       - gpg
       - apt-transport-https
+      - python3-debian  # required by deb822_repository on the target
     state: present
 
 - name: Add kernel.org Ubuntu mirror (main, updates, backports)
