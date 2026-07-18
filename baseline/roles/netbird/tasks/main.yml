@@ -1,28 +1,41 @@
 ---
-- name: Ensure deb822_repository requirements are present
+# Repository setup mirrors NetBird's quickstart guide exactly (key dearmored
+# to /usr/share/keyrings/netbird-archive-keyring.gpg, one-line entry in
+# netbird.list), so hosts installed manually per the docs converge without
+# conflicting apt sources.
+- name: Ensure repository prerequisites are present
   ansible.builtin.apt:
-    name: python3-debian
+    name:
+      - ca-certificates
+      - gnupg
     state: present
 
-# NetBird's install.sh (and the docs' manual setup) writes netbird.list with
-# the signing key at /usr/share/keyrings/. Our deb822 source keeps the key
-# at /etc/apt/keyrings/netbird.asc, and apt refuses to read the sources when
-# both entries exist with different Signed-By values. No-op on clean hosts.
-- name: Remove legacy NetBird apt source
+- name: Download NetBird signing key (armored)
+  ansible.builtin.get_url:
+    url: "{{ netbird_repo_key_url }}"
+    dest: "{{ netbird_keyring_path }}.asc"
+    mode: '0644'
+
+- name: Convert NetBird signing key to keyring
+  ansible.builtin.command:
+    cmd: gpg --dearmor --output {{ netbird_keyring_path }} {{ netbird_keyring_path }}.asc
+    creates: "{{ netbird_keyring_path }}"
+
+# Earlier versions of this role wrote a deb822 source keyed at
+# /etc/apt/keyrings/netbird.asc, which conflicts with the quickstart layout.
+- name: Remove deb822 NetBird source written by earlier role versions
   ansible.builtin.file:
-    path: /etc/apt/sources.list.d/netbird.list
+    path: "{{ item }}"
     state: absent
+  loop:
+    - /etc/apt/sources.list.d/netbird.sources
+    - /etc/apt/keyrings/netbird.asc
 
-- name: Install NetBird apt repository
-  ansible.builtin.deb822_repository:
-    name: netbird
-    enabled: true
+- name: Install NetBird apt repository (quickstart layout)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by={{ netbird_keyring_path }}] {{ netbird_repo_url }} stable main"
+    filename: netbird
     state: present
-    types: [deb]
-    uris: "{{ netbird_repo_url }}"
-    signed_by: "{{ netbird_repo_key_url }}"
-    suites: [stable]
-    components: [main]
 
 - name: Install NetBird client
   ansible.builtin.apt:

@@ -27,9 +27,11 @@ netbird_up_extra_args: []
 # Package state: present (install once) or latest (upgrade on every run).
 netbird_package_state: present
 
-# Official NetBird apt repository.
+# Official NetBird apt repository, laid out exactly like the quickstart
+# guide so manually-installed hosts converge cleanly.
 netbird_repo_url: "https://pkgs.netbird.io/debian"
 netbird_repo_key_url: "https://pkgs.netbird.io/debian/public.key"
+netbird_keyring_path: "/usr/share/keyrings/netbird-archive-keyring.gpg"
 
 # Service management.
 netbird_service_enabled: true
