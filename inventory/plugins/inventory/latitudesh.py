@@ -14,6 +14,12 @@ DOCUMENTATION = r"""
     name: latitudesh
     plugin_type: inventory
     short_description: Latitude.sh Dynamic Inventory
+    description:
+        - Builds inventory from Latitude.sh servers; every server tag becomes a group.
+        - Tags of the form C(key__value) (snake_case, first C(__) is the separator)
+          are additionally parsed into the C(latitudesh_tags) dict host var and the
+          C(latitudesh_datadog_tags) list (C(key:value) strings, prefixed with
+          C(provider:latitude)). See docs/tagging.md for the tag registry.
     extends_documentation_fragment:
         - inventory_cache
         - constructed
@@ -132,6 +138,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         host_vars["ansible_ssh_host"] = primary_ipv4
         host_vars["public_ip_address"] = primary_ipv4
 
+        # Expose `key__value` tags as host vars (see docs/tagging.md).
+        tag_vars = parse_kv_tags(groups)
+        host_vars["latitudesh_tags"] = tag_vars
+        host_vars["latitudesh_datadog_tags"] = ["provider:latitude"] + [
+            f"{key}:{value}" for key, value in sorted(tag_vars.items())
+        ]
+
         for var_name, var_value in host_vars.items():
             inventory.set_variable(hostname, var_name, var_value)
 
@@ -158,6 +171,26 @@ def http_get_json(url: str, headers: Dict[str, str], params: Dict[str, Any] = No
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=10) as res:
         return json.load(res)
+
+
+def parse_kv_tags(tag_names: List[str]) -> Dict[str, str]:
+    """
+    Parse `key__value` tags into a dict, splitting on the FIRST double
+    underscore. Keys are snake_case (single underscores only), so the first
+    `__` is always the separator; values may contain single underscores.
+    Tags without `__` are flat labels and are skipped.
+
+    Example:
+      ["chain_network__tezos_mainnet", "legacy-tag"] -> {"chain_network": "tezos_mainnet"}
+    """
+    parsed: Dict[str, str] = {}
+    for tag in tag_names:
+        if not tag or "__" not in tag:
+            continue
+        key, _, value = tag.partition("__")
+        if key and value:
+            parsed[key] = value
+    return parsed
 
 
 def flatten_params_dict(params: Dict[str, Any]) -> Dict[str, Union[str, List[str]]]:

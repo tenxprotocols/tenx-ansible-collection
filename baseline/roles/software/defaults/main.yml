@@ -5,6 +5,16 @@ baseline_software_marker_file: "/etc/tenx/.baseline-software-applied"
 # be supplied by Semaphore UI (Environment secret) or any CI runner; can also
 # be overridden as an extra var (-e baseline_datadog_api_key=...).
 baseline_datadog_api_key: "{{ lookup('env', 'DD_API_KEY') }}"
-# Extra host tags written to /etc/datadog-agent/environment as DD_EXTRA_TAGS.
-# Override in inventory group_vars/host_vars, e.g. ["env:prod", "role:baker"].
-baseline_datadog_tags: []
+# Datadog host tags written to /etc/datadog-agent/environment as
+# DD_EXTRA_TAGS (see docs/tagging.md for the tag registry). Composed from:
+#   baseline_datadog_tags_base  - fleet-wide defaults
+#   latitudesh_datadog_tags     - parsed from Latitude `key__value` server tags
+#                                 by tenx.inventory.latitudesh (absent elsewhere)
+#   baseline_datadog_tags_extra - per-host/group additions from inventory
+baseline_datadog_tags_base:
+  - managed_by:ansible
+baseline_datadog_tags_extra: []
+baseline_datadog_tags: >-
+  {{ (baseline_datadog_tags_base
+      + (latitudesh_datadog_tags | default([]))
+      + baseline_datadog_tags_extra) | unique }}
