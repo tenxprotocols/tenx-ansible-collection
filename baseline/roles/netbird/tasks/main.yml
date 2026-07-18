@@ -55,6 +55,19 @@
           netbird_setup_key must be set (or NB_SETUP_KEY exported) to enroll
           this peer with the NetBird management service.
 
+    # Catch value drift from the Semaphore Environment (wrong key, stray
+    # whitespace/quotes) without exposing the secret. Quotes in the output
+    # make leading/trailing whitespace visible.
+    - name: Show enrollment parameters (setup key redacted)
+      ansible.builtin.debug:
+        msg: >-
+          Enrolling with setup key
+          '{{ netbird_setup_key[:2] }}...{{ netbird_setup_key[-2:] }}'
+          (length {{ netbird_setup_key | length }}),
+          management URL
+          '{{ netbird_management_url if netbird_management_url | length > 0
+              else '(client default: NetBird cloud)' }}'
+
     - name: Enroll peer with netbird up
       ansible.builtin.command:
         argv: >-
