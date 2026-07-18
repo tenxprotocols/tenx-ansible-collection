@@ -44,6 +44,7 @@ tags:
 # range specifiers can be set and are separated by ','
 dependencies:
   devsec.hardening: '>=8.0.0'
+  datadog.dd: '>=6.0.0'
 
 # The URL of the originating SCM repository
 repository: https://github.com/tenxprotocols/tenx-ansible-collection
