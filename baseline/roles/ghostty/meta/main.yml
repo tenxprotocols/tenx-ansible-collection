@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  author: TenX Protocols Infrastructure Team
+  description: Install Ghostty terminal emulator's terminfo
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+
+  galaxy_tags:
+    - ghostty
+    - terminal
+    - terminfo
+
+dependencies: []
