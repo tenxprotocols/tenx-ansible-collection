@@ -4,6 +4,15 @@
     name: python3-debian
     state: present
 
+# NetBird's install.sh (and the docs' manual setup) writes netbird.list with
+# the signing key at /usr/share/keyrings/. Our deb822 source keeps the key
+# at /etc/apt/keyrings/netbird.asc, and apt refuses to read the sources when
+# both entries exist with different Signed-By values. No-op on clean hosts.
+- name: Remove legacy NetBird apt source
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/netbird.list
+    state: absent
+
 - name: Install NetBird apt repository
   ansible.builtin.deb822_repository:
     name: netbird
