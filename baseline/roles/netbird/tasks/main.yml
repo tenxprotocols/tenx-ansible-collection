@@ -55,6 +55,19 @@
           netbird_setup_key must be set (or NB_SETUP_KEY exported) to enroll
           this peer with the NetBird management service.
 
+    # Catch value drift from the Semaphore Environment (wrong key, stray
+    # whitespace/quotes) without exposing the secret. Quotes in the output
+    # make leading/trailing whitespace visible.
+    - name: Show enrollment parameters (setup key redacted)
+      ansible.builtin.debug:
+        msg: >-
+          Enrolling with setup key
+          '{{ netbird_setup_key[:2] }}...{{ netbird_setup_key[-2:] }}'
+          (length {{ netbird_setup_key | length }}),
+          management URL
+          '{{ netbird_management_url if netbird_management_url | length > 0
+              else '(client default: NetBird cloud)' }}'
+
     - name: Enroll peer with netbird up
       ansible.builtin.command:
         argv: >-
@@ -63,8 +76,20 @@
                 if netbird_management_url | length > 0 else [])
              + (['--allow-server-ssh'] if netbird_allow_ssh else [])
              + netbird_up_extra_args }}
+      register: netbird_up_result
       no_log: true
       changed_when: true
+      failed_when: false
+
+    # The raw result stays no_log (the argv contains the setup key); surface
+    # the error with the key redacted so failures are debuggable.
+    - name: Report enrollment failure
+      ansible.builtin.fail:
+        msg: >-
+          netbird up failed (rc={{ netbird_up_result.rc }}):
+          {{ ((netbird_up_result.stderr | default('')) ~ ' ' ~ (netbird_up_result.stdout | default('')))
+             | replace(netbird_setup_key, '***') | trim }}
+      when: netbird_up_result.rc != 0
 
     - name: Verify management connection
       ansible.builtin.command: netbird status
