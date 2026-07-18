@@ -1,4 +1,19 @@
 ---
+- name: Validate account variable types
+  ansible.builtin.assert:
+    that:
+      - users_accounts | type_debug == 'list'
+      - users_accounts_extra | type_debug == 'list'
+      - users_absent | type_debug == 'list'
+    fail_msg: >-
+      users_accounts, users_accounts_extra and users_absent must be lists
+      (e.g. users_accounts: [{name: geoff, uid: 2001, sudo: true}]).
+      Got: users_accounts={{ users_accounts | type_debug }},
+      users_accounts_extra={{ users_accounts_extra | type_debug }},
+      users_absent={{ users_absent | type_debug }}.
+      Check inventory group_vars/host_vars and Semaphore extra variables
+      for a bare dict where a list is expected.
+
 - name: Combine fleet-wide and host-specific accounts
   ansible.builtin.set_fact:
     users_all_accounts: "{{ users_accounts + users_accounts_extra }}"
