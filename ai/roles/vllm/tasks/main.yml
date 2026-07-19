@@ -1,0 +1,143 @@
+---
+- name: Assert a model is configured
+  ansible.builtin.assert:
+    that:
+      - vllm_model | length > 0
+    fail_msg: "vllm_model must be set to the HuggingFace repo of the model to serve."
+
+- name: Verify the NVIDIA driver is working
+  ansible.builtin.command: nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
+  register: vllm_gpu_mem
+  changed_when: false
+
+- name: Assert the GPU has enough VRAM
+  ansible.builtin.assert:
+    that:
+      - (vllm_gpu_mem.stdout_lines | map('trim') | map('int') | sum) >= (vllm_min_vram_gb | int) * 1024
+    fail_msg: >-
+      Total GPU VRAM {{ vllm_gpu_mem.stdout_lines | map('trim') | map('int') | sum }} MiB
+      is below the required {{ vllm_min_vram_gb }} GiB for {{ vllm_model }}.
+  when: vllm_min_vram_gb | int > 0
+
+- name: Ensure prerequisites are present
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+    state: present
+
+- name: Create vllm group
+  ansible.builtin.group:
+    name: "{{ vllm_group }}"
+    system: true
+
+- name: Create vllm user
+  ansible.builtin.user:
+    name: "{{ vllm_user }}"
+    group: "{{ vllm_group }}"
+    system: true
+    home: "{{ vllm_home }}"
+    create_home: false
+    shell: /usr/sbin/nologin
+
+- name: Create vllm directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ vllm_user }}"
+    group: "{{ vllm_group }}"
+    mode: '0755'
+  loop:
+    - "{{ vllm_home }}"
+    - "{{ vllm_hf_home }}"
+
+- name: Create config directory
+  ansible.builtin.file:
+    path: "{{ vllm_env_file | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install uv
+  ansible.builtin.shell:
+    cmd: set -o pipefail && curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh
+    creates: /usr/local/bin/uv
+    executable: /bin/bash
+
+- name: Create vLLM virtualenv
+  ansible.builtin.command:
+    cmd: uv venv --python {{ vllm_python_version }} {{ vllm_venv_dir }}
+    creates: "{{ vllm_venv_dir }}/bin/python"
+
+- name: Check installed vLLM version
+  ansible.builtin.command:
+    cmd: "{{ vllm_venv_dir }}/bin/python -c 'import vllm; print(vllm.__version__)'"
+  register: vllm_installed_version
+  changed_when: false
+  failed_when: false
+
+- name: Install vLLM {{ vllm_version }}
+  ansible.builtin.command:
+    cmd: uv pip install --python {{ vllm_venv_dir }}/bin/python vllm=={{ vllm_version }}
+  when: >-
+    vllm_installed_version.rc != 0
+    or vllm_installed_version.stdout | trim != vllm_version
+  changed_when: true
+  notify: Restart vllm
+
+- name: Deploy environment file
+  ansible.builtin.template:
+    src: vllm.env.j2
+    dest: "{{ vllm_env_file }}"
+    owner: root
+    group: "{{ vllm_group }}"
+    mode: '0640'
+  no_log: true
+  notify: Restart vllm
+
+- name: Deploy systemd unit
+  ansible.builtin.template:
+    src: vllm.service.j2
+    dest: /etc/systemd/system/vllm.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart vllm
+
+- name: Enable and start vllm service
+  ansible.builtin.systemd:
+    name: vllm
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Apply pending vllm restarts before the health check
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for the vLLM API to become healthy
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ vllm_port }}/health"
+    status_code: 200
+  register: vllm_health
+  until: vllm_health.status == 200
+  retries: "{{ (vllm_health_timeout | int / 15) | int }}"
+  delay: 15
+
+- name: Check for the Datadog agent
+  ansible.builtin.stat:
+    path: /etc/datadog-agent/conf.d
+  register: vllm_datadog_conf_dir
+  when: vllm_datadog_check
+
+- name: Deploy Datadog OpenMetrics check for vLLM
+  ansible.builtin.template:
+    src: datadog-vllm.yaml.j2
+    dest: /etc/datadog-agent/conf.d/openmetrics.d/vllm.yaml
+    owner: dd-agent
+    group: dd-agent
+    mode: '0644'
+  when:
+    - vllm_datadog_check
+    - vllm_datadog_conf_dir.stat.exists
+  notify: Restart datadog-agent

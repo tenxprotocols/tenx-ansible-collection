@@ -8,6 +8,7 @@ Ansible collections maintained by [TenX Protocols](https://tenx.inc) for infrast
 |---|---|---|
 | `tenx.inventory` | [`inventory/`](inventory/) | Dynamic inventory plugins, including [latitude.sh](https://www.latitude.sh/) (`tenx.inventory.latitudesh`) |
 | `tenx.baseline` | [`baseline/`](baseline/) | Baseline server configuration: OS/SSH hardening, APT mirrors, Datadog agent |
+| `tenx.ai` | [`ai/`](ai/) | AI inference: NVIDIA driver bring-up and vLLM model serving |
 
 ## Installation
 
@@ -19,6 +20,9 @@ collections:
     type: git
     version: main
   - name: https://github.com/tenxprotocols/tenx-ansible-collection.git#/baseline/
+    type: git
+    version: main
+  - name: https://github.com/tenxprotocols/tenx-ansible-collection.git#/ai/
     type: git
     version: main
 ```

@@ -1,0 +1,60 @@
+---
+# HuggingFace repo of the model to serve. REQUIRED. Pin a quantized build
+# that fits the GPU (e.g. an AWQ INT4 build of an 80B MoE for a single
+# 80 GB card); see the role README.
+vllm_model: ""
+
+# Model name exposed on the OpenAI-compatible API (`model=` in requests).
+vllm_served_model_name: "{{ vllm_model | basename }}"
+
+# vLLM version installed into the venv (Qwen3-Coder-Next needs >= 0.15.0).
+vllm_version: "0.25.1"
+
+# Python for the venv; uv downloads it if the OS python is unsupported.
+vllm_python_version: "3.12"
+
+# Listen address/port of the OpenAI-compatible API.
+vllm_host: "0.0.0.0"
+vllm_port: 8000
+
+# Engine sizing.
+vllm_max_model_len: 131072
+vllm_gpu_memory_utilization: 0.92
+vllm_tensor_parallel_size: 1
+
+# Tool calling (agentic use; qwen3_coder matches Qwen3-Coder models).
+vllm_enable_auto_tool_choice: true
+vllm_tool_call_parser: "qwen3_coder"
+
+# Extra flags appended to `vllm serve`, e.g. ["--enable-prefix-caching"].
+vllm_extra_args: []
+
+# Secrets default to environment variables so Semaphore UI (Environment
+# secrets) or any CI runner can supply them. The HF token is only needed
+# for gated/private models. If vllm_api_key is set, clients must send it
+# as a Bearer token.
+vllm_hf_token: "{{ lookup('env', 'HF_TOKEN') }}"
+vllm_api_key: "{{ lookup('env', 'VLLM_API_KEY') }}"
+
+# Service user and paths. Keep the HF cache on a large disk: model
+# downloads land there (tens of GB per model).
+vllm_user: vllm
+vllm_group: vllm
+vllm_home: /opt/vllm
+vllm_venv_dir: /opt/vllm/venv
+vllm_hf_home: /opt/vllm/huggingface
+vllm_env_file: /etc/vllm/vllm.env
+
+# Reduces CUDA memory-fragmentation OOMs.
+vllm_pytorch_cuda_alloc_conf: "expandable_segments:True"
+
+# Fail fast if total GPU VRAM is below this many GiB; 0 disables the check.
+vllm_min_vram_gb: 0
+
+# Seconds to wait for the API to come up after (re)start. First start
+# downloads the model, which can take a while on top of load time.
+vllm_health_timeout: 1800
+
+# Deploy a Datadog OpenMetrics check scraping vLLM's /metrics (only when
+# the Datadog agent is present on the host).
+vllm_datadog_check: true
