@@ -18,8 +18,17 @@
 
 - name: Convert NetBird signing key to keyring
   ansible.builtin.command:
-    cmd: gpg --dearmor --output {{ netbird_keyring_path }} {{ netbird_keyring_path }}.asc
+    cmd: gpg --batch --yes --dearmor --output {{ netbird_keyring_path }} {{ netbird_keyring_path }}.asc
     creates: "{{ netbird_keyring_path }}"
+
+# gpg writes the keyring 0600; apt verifies signatures sandboxed as _apt,
+# which then can't read the key and the repo fails as "not signed".
+- name: Ensure keyring is readable by apt
+  ansible.builtin.file:
+    path: "{{ netbird_keyring_path }}"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Install NetBird apt repository (quickstart layout)
   ansible.builtin.apt_repository:
