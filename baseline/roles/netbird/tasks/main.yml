@@ -21,16 +21,6 @@
     cmd: gpg --dearmor --output {{ netbird_keyring_path }} {{ netbird_keyring_path }}.asc
     creates: "{{ netbird_keyring_path }}"
 
-# Earlier versions of this role wrote a deb822 source keyed at
-# /etc/apt/keyrings/netbird.asc, which conflicts with the quickstart layout.
-- name: Remove deb822 NetBird source written by earlier role versions
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - /etc/apt/sources.list.d/netbird.sources
-    - /etc/apt/keyrings/netbird.asc
-
 - name: Install NetBird apt repository (quickstart layout)
   ansible.builtin.apt_repository:
     repo: "deb [signed-by={{ netbird_keyring_path }}] {{ netbird_repo_url }} stable main"
