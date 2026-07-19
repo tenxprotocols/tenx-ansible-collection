@@ -52,6 +52,12 @@ vllm_env_file: /etc/vllm/vllm.env
 # Reduces CUDA memory-fragmentation OOMs.
 vllm_pytorch_cuda_alloc_conf: "expandable_segments:True"
 
+# CUDA toolkit for flashinfer's JIT-compiled kernels (nvcc). The major
+# version must match torch's CUDA build (vllm 0.25.x wheels are cu130 ->
+# CUDA 13). Set the package to "" to skip installing the toolkit.
+vllm_cuda_keyring_url: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2604/x86_64/cuda-keyring_1.1-1_all.deb"
+vllm_cuda_toolkit_package: "cuda-toolkit-13"
+
 # Fail fast if total GPU VRAM is below this many GiB; 0 disables the check.
 vllm_min_vram_gb: 0
 
