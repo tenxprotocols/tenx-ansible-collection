@@ -26,21 +26,3 @@
     state: present
     enabled: yes
   notify: Update APT cache
-
-- name: Add Ubuntu security mirror
-  ansible.builtin.deb822_repository:
-    name: ubuntu-security
-    types: [ deb, deb-src ]
-    uris:
-      - "http://security.ubuntu.com/ubuntu"
-    suites:
-      - "{{ ansible_distribution_release }}-security"
-    components:
-      - main
-      - restricted
-      - universe
-      - multiverse
-    signed_by: /usr/share/keyrings/ubuntu-archive-keyring.gpg
-    state: present
-    enabled: yes
-  notify: Update APT cache
