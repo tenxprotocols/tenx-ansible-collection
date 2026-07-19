@@ -65,10 +65,16 @@
     creates: /usr/local/bin/uv
     executable: /bin/bash
 
+# umask 022 and UV_PYTHON_INSTALL_DIR matter: the baseline hardening sets
+# a 027 login umask (root-created dirs would be unreadable by the vllm
+# user), and uv's default managed-Python location is under /root, which
+# the service user cannot traverse.
 - name: Create vLLM virtualenv
-  ansible.builtin.command:
-    cmd: uv venv --python {{ vllm_python_version }} {{ vllm_venv_dir }}
+  ansible.builtin.shell:
+    cmd: umask 022 && uv venv --python {{ vllm_python_version }} {{ vllm_venv_dir }}
     creates: "{{ vllm_venv_dir }}/bin/python"
+  environment:
+    UV_PYTHON_INSTALL_DIR: "{{ vllm_python_install_dir }}"
 
 - name: Check installed vLLM version
   ansible.builtin.command:
@@ -78,13 +84,22 @@
   failed_when: false
 
 - name: Install vLLM {{ vllm_version }}
-  ansible.builtin.command:
-    cmd: uv pip install --python {{ vllm_venv_dir }}/bin/python vllm=={{ vllm_version }}
+  ansible.builtin.shell:
+    cmd: umask 022 && uv pip install --python {{ vllm_venv_dir }}/bin/python vllm=={{ vllm_version }}
+  environment:
+    UV_PYTHON_INSTALL_DIR: "{{ vllm_python_install_dir }}"
   when: >-
     vllm_installed_version.rc != 0
     or vllm_installed_version.stdout | trim != vllm_version
   changed_when: true
   notify: Restart vllm
+
+# Convergence for hosts provisioned before the umask fix, and for files
+# hardlinked out of uv's cache with restrictive modes.
+- name: Ensure venv and managed Python are world-readable
+  ansible.builtin.command:
+    cmd: chmod -R a+rX {{ vllm_python_install_dir }} {{ vllm_venv_dir }}
+  changed_when: false
 
 - name: Deploy environment file
   ansible.builtin.template:

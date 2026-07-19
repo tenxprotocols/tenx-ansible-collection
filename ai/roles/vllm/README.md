@@ -34,6 +34,7 @@ instead of an OOM loop.
 | `vllm_hf_token` | `$HF_TOKEN` | HF token (gated/private models only) |
 | `vllm_api_key` | `$VLLM_API_KEY` | if set, required as Bearer token |
 | `vllm_hf_home` | `/opt/vllm/huggingface` | model cache (needs tens of GB) |
+| `vllm_python_install_dir` | `/opt/vllm/python` | uv-managed Python location (must be service-user readable) |
 | `vllm_min_vram_gb` | `0` (off) | preflight VRAM assertion |
 | `vllm_health_timeout` | `1800` | seconds to wait for `/health` |
 | `vllm_datadog_check` | `true` | scrape `/metrics` via Datadog OpenMetrics |
