@@ -31,10 +31,35 @@
       ansible.builtin.command: ubuntu-drivers install --gpgpu
       changed_when: true
 
+    # The gpgpu profile installs the headless driver set only; nvidia-smi
+    # lives in the matching nvidia-utils package (e.g. nvidia-utils-595-server
+    # alongside nvidia-kernel-common-595-server).
+    - name: Determine NVIDIA utilities package
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail &&
+          dpkg-query -W -f '${Package}\n' 'nvidia-kernel-common-*'
+          | head -1 | sed 's/kernel-common/utils/'
+        executable: /bin/bash
+      register: nvidia_driver_utils_pkg
+      changed_when: false
+
+    - name: Install NVIDIA utilities (nvidia-smi)
+      ansible.builtin.apt:
+        name: "{{ nvidia_driver_utils_pkg.stdout | trim }}"
+        state: present
+
+    - name: Check whether the NVIDIA kernel module is loaded
+      ansible.builtin.stat:
+        path: /sys/module/nvidia
+      register: nvidia_driver_module
+
     - name: Reboot to load the NVIDIA driver
       ansible.builtin.reboot:
         reboot_timeout: "{{ nvidia_driver_reboot_timeout }}"
-      when: nvidia_driver_allow_reboot
+      when:
+        - nvidia_driver_allow_reboot
+        - not nvidia_driver_module.stat.exists
 
     - name: Verify the NVIDIA driver after installation
       ansible.builtin.command: nvidia-smi
