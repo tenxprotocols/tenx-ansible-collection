@@ -42,6 +42,9 @@ vllm_user: vllm
 vllm_group: vllm
 vllm_home: /opt/vllm
 vllm_venv_dir: /opt/vllm/venv
+# Where uv keeps its managed Python. Must NOT be under /root: the venv
+# symlinks the interpreter from here and the service user must traverse it.
+vllm_python_install_dir: /opt/vllm/python
 vllm_hf_home: /opt/vllm/huggingface
 vllm_env_file: /etc/vllm/vllm.env
 
