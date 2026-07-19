@@ -19,11 +19,17 @@
       is below the required {{ vllm_min_vram_gb }} GiB for {{ vllm_model }}.
   when: vllm_min_vram_gb | int > 0
 
+# gcc/libc6-dev: Triton JIT-compiles small C shims at runtime (e.g.
+# cuda_utils.c for the Qwen3-Next DeltaNet kernels); without libc headers
+# vLLM dies at startup with 'fatal error: stdlib.h: No such file or
+# directory'.
 - name: Ensure prerequisites are present
   ansible.builtin.apt:
     name:
       - curl
       - ca-certificates
+      - gcc
+      - libc6-dev
     state: present
 
 - name: Create vllm group
