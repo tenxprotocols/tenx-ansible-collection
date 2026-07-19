@@ -29,6 +29,10 @@ vllm_tool_call_parser: "qwen3_coder"
 # Extra flags appended to `vllm serve`, e.g. ["--enable-prefix-caching"].
 vllm_extra_args: []
 
+# Extra environment variables written to the service environment file,
+# e.g. {"VLLM_USE_FLASHINFER_SAMPLER": "0"}.
+vllm_extra_env: {}
+
 # Secrets default to environment variables so Semaphore UI (Environment
 # secrets) or any CI runner can supply them. The HF token is only needed
 # for gated/private models. If vllm_api_key is set, clients must send it
