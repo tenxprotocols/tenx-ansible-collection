@@ -1,0 +1,11 @@
+---
+- name: Restart vllm
+  ansible.builtin.systemd:
+    name: vllm
+    state: restarted
+    daemon_reload: true
+
+- name: Restart datadog-agent
+  ansible.builtin.systemd:
+    name: datadog-agent
+    state: restarted

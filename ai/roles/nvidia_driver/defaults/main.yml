@@ -1,0 +1,4 @@
+---
+# Reboot automatically after installing the driver (required to load it).
+nvidia_driver_allow_reboot: true
+nvidia_driver_reboot_timeout: 900

@@ -1,0 +1,20 @@
+namespace: tenx
+name: ai
+version: 1.0.0
+readme: README.md
+authors:
+  - TenX Protocols Infrastructure Team
+description: Ansible collection for AI inference infrastructure (NVIDIA GPU setup and vLLM serving)
+license: MIT
+tags:
+  - ai
+  - vllm
+  - gpu
+  - nvidia
+  - inference
+dependencies: {}
+repository: https://github.com/tenxprotocols/tenx-ansible-collection
+documentation: https://github.com/tenxprotocols/tenx-ansible-collection
+homepage: https://github.com/tenxprotocols/tenx-ansible-collection
+issues: https://github.com/tenxprotocols/tenx-ansible-collection/issues
+build_ignore: []

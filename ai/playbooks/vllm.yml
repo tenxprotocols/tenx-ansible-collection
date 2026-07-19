@@ -1,0 +1,7 @@
+---
+- name: Deploy vLLM inference server
+  hosts: "{{ target_hosts | default('role__inference') }}"
+  become: true
+  roles:
+    - role: tenx.ai.nvidia_driver
+    - role: tenx.ai.vllm

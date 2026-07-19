@@ -1,0 +1,41 @@
+---
+- name: Ensure GPU tooling packages are present
+  ansible.builtin.apt:
+    name:
+      - pciutils
+      - ubuntu-drivers-common
+    state: present
+    update_cache: true
+
+- name: Detect NVIDIA GPU
+  ansible.builtin.command: "lspci -d 10de:"
+  register: nvidia_driver_gpus
+  changed_when: false
+
+- name: Assert an NVIDIA GPU is present
+  ansible.builtin.assert:
+    that:
+      - nvidia_driver_gpus.stdout | trim | length > 0
+    fail_msg: "No NVIDIA GPU found on this host (lspci -d 10de: returned nothing)."
+
+- name: Check whether the NVIDIA driver is already working
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_driver_smi
+  changed_when: false
+  failed_when: false
+
+- name: Install NVIDIA driver
+  when: nvidia_driver_smi.rc != 0
+  block:
+    - name: Install recommended NVIDIA server driver
+      ansible.builtin.command: ubuntu-drivers install --gpgpu
+      changed_when: true
+
+    - name: Reboot to load the NVIDIA driver
+      ansible.builtin.reboot:
+        reboot_timeout: "{{ nvidia_driver_reboot_timeout }}"
+      when: nvidia_driver_allow_reboot
+
+    - name: Verify the NVIDIA driver after installation
+      ansible.builtin.command: nvidia-smi
+      changed_when: false

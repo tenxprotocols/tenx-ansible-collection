@@ -1,0 +1,8 @@
+# Managed by Ansible (tenx.ai.vllm).
+init_config:
+
+instances:
+  - openmetrics_endpoint: "http://127.0.0.1:{{ vllm_port }}/metrics"
+    namespace: "vllm"
+    metrics:
+      - ".*"
