@@ -12,7 +12,9 @@ cloud or a self-hosted management server — set `netbird_management_url`
 
 ## What it does
 
-1. Adds the official apt repository (`pkgs.netbird.io/debian stable main`).
+1. Adds the official apt repository (`pkgs.netbird.io/debian stable main`),
+   using the same key/source locations as NetBird's quickstart guide so
+   manually-installed hosts converge without conflicting apt sources.
 2. Installs the `netbird` package and ensures the service is running.
 3. If the peer is not yet enrolled (`netbird status` reports `NeedsLogin`
    or `LoginFailed`), runs `netbird up` with the setup key, management URL,
@@ -34,6 +36,7 @@ this role existed. The setup key is only required for that first enrollment.
 | `netbird_package_state` | `present` | set `latest` to upgrade the client on every run |
 | `netbird_repo_url` | `https://pkgs.netbird.io/debian` | apt repository URL |
 | `netbird_repo_key_url` | `.../public.key` | apt signing key URL |
+| `netbird_keyring_path` | `/usr/share/keyrings/netbird-archive-keyring.gpg` | dearmored keyring location (quickstart default) |
 | `netbird_service_enabled` | `true` | enable the netbird service at boot |
 | `netbird_service_state` | `started` | desired service state |
 
