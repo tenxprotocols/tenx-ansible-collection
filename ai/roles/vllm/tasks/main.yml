@@ -19,17 +19,19 @@
       is below the required {{ vllm_min_vram_gb }} GiB for {{ vllm_model }}.
   when: vllm_min_vram_gb | int > 0
 
-# gcc/libc6-dev: Triton JIT-compiles small C shims at runtime (e.g.
-# cuda_utils.c for the Qwen3-Next DeltaNet kernels); without libc headers
-# vLLM dies at startup with 'fatal error: stdlib.h: No such file or
-# directory'.
+# Runtime JIT toolchain — missing pieces fail at vLLM startup, not install
+# time: Triton compiles C shims with gcc against libc headers ('fatal
+# error: stdlib.h'), and flashinfer drives its CUDA kernel builds with
+# ninja ('FileNotFoundError: ninja') using g++ as nvcc's host compiler.
 - name: Ensure prerequisites are present
   ansible.builtin.apt:
     name:
       - curl
       - ca-certificates
       - gcc
+      - g++
       - libc6-dev
+      - ninja-build
     state: present
 
 # flashinfer JIT-compiles its CUDA kernels at runtime (GDN prefill,
