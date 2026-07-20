@@ -32,6 +32,21 @@
       - libc6-dev
     state: present
 
+# flashinfer JIT-compiles its CUDA kernels at runtime (GDN prefill,
+# sampling) and needs nvcc; the toolkit's /usr/local/cuda symlink is where
+# it looks.
+- name: Install NVIDIA CUDA repository keyring
+  ansible.builtin.apt:
+    deb: "{{ vllm_cuda_keyring_url }}"
+  when: vllm_cuda_toolkit_package | length > 0
+
+- name: Install CUDA toolkit
+  ansible.builtin.apt:
+    name: "{{ vllm_cuda_toolkit_package }}"
+    state: present
+    update_cache: true
+  when: vllm_cuda_toolkit_package | length > 0
+
 - name: Create vllm group
   ansible.builtin.group:
     name: "{{ vllm_group }}"

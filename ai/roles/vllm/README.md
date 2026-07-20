@@ -31,6 +31,9 @@ instead of an OOM loop.
 | `vllm_enable_auto_tool_choice` | `true` | enable tool calling |
 | `vllm_tool_call_parser` | `qwen3_coder` | parser matching the model family |
 | `vllm_extra_args` | `[]` | extra `vllm serve` flags |
+| `vllm_extra_env` | `{}` | extra env vars for the service (e.g. `VLLM_USE_FLASHINFER_SAMPLER: "0"`) |
+| `vllm_cuda_toolkit_package` | `cuda-toolkit-13` | CUDA toolkit for flashinfer JIT (match torch's CUDA major); `""` skips |
+| `vllm_cuda_keyring_url` | ubuntu2604 keyring | NVIDIA apt repo keyring deb |
 | `vllm_hf_token` | `$HF_TOKEN` | HF token (gated/private models only) |
 | `vllm_api_key` | `$VLLM_API_KEY` | if set, required as Bearer token |
 | `vllm_hf_home` | `/opt/vllm/huggingface` | model cache (needs tens of GB) |
